@@ -173,6 +173,59 @@
             font-size: 12px;
             font-weight: bold;
         }
+
+        .contact {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            text-align: left;
+        }
+        .contact h2 {
+            font-size: 16px;
+            margin: 0 0 4px;
+        }
+        .contact p {
+            font-size: 13px;
+            color: var(--muted);
+            margin: 0 0 16px;
+        }
+        .contact form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .contact label {
+            font-size: 13px;
+            color: var(--muted);
+        }
+        .contact input,
+        .contact textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+        }
+        .contact textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+        .contact button {
+            margin-top: 4px;
+            align-self: flex-start;
+            padding: 10px 24px;
+            font-size: 14px;
+        }
+        .contact-status {
+            font-size: 13px;
+            margin-top: 4px;
+            display: none;
+        }
+        .contact-status.success { color: #4ade80; display: block; }
+        .contact-status.error { color: #f87171; display: block; }
     </style>
 </head>
 <body>
@@ -191,6 +244,24 @@
         <div class="history" id="history" style="display:none;">
             <h2>지난 추첨 기록</h2>
             <div id="historyList"></div>
+        </div>
+
+        <div class="contact">
+            <h2>제휴 문의</h2>
+            <p>제휴 및 협업 관련 문의는 아래 양식으로 남겨주세요.</p>
+            <form id="contactForm">
+                <label for="contactName">이름</label>
+                <input type="text" id="contactName" name="name" required>
+
+                <label for="contactEmail">이메일</label>
+                <input type="email" id="contactEmail" name="email" required>
+
+                <label for="contactMessage">문의 내용</label>
+                <textarea id="contactMessage" name="message" required></textarea>
+
+                <button type="submit" id="contactSubmit">문의 보내기</button>
+                <div class="contact-status" id="contactStatus"></div>
+            </form>
         </div>
     </div>
 
@@ -292,6 +363,39 @@
         }
 
         drawBtn.addEventListener('click', draw);
+
+        const contactForm = document.getElementById('contactForm');
+        const contactSubmit = document.getElementById('contactSubmit');
+        const contactStatus = document.getElementById('contactStatus');
+
+        contactForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            contactSubmit.disabled = true;
+            contactStatus.className = 'contact-status';
+            contactStatus.textContent = '';
+
+            try {
+                const response = await fetch('https://formspree.io/f/xqerkpwj', {
+                    method: 'POST',
+                    body: new FormData(contactForm),
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (response.ok) {
+                    contactStatus.textContent = '문의가 정상적으로 접수되었습니다. 감사합니다!';
+                    contactStatus.className = 'contact-status success';
+                    contactForm.reset();
+                } else {
+                    contactStatus.textContent = '전송에 실패했습니다. 잠시 후 다시 시도해주세요.';
+                    contactStatus.className = 'contact-status error';
+                }
+            } catch (err) {
+                contactStatus.textContent = '네트워크 오류로 전송하지 못했습니다.';
+                contactStatus.className = 'contact-status error';
+            } finally {
+                contactSubmit.disabled = false;
+            }
+        });
     </script>
 </body>
 </html>
