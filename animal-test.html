@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>동물상 테스트</title>
+    <title>동물상 테스트 - AI로 강아지상 고양이상 판별하기</title>
+    <meta name="description" content="사진을 업로드하면 AI(Teachable Machine) 모델이 강아지상인지 고양이상인지 확률로 알려주는 무료 동물상 테스트입니다.">
     <meta name="google-adsense-account" content="ca-pub-6417299670040046">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6417299670040046"
      crossorigin="anonymous"></script>
@@ -22,6 +23,7 @@
             margin: 0;
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             background: linear-gradient(160deg, var(--bg-grad-1), var(--bg-grad-2));
@@ -29,14 +31,49 @@
             color: var(--text);
             padding: 24px;
         }
-        .card {
+        .page {
             width: 100%;
             max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .site-nav {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 13px;
+        }
+        .site-nav a {
+            color: var(--muted);
+            text-decoration: none;
+        }
+        .site-nav a:hover { color: var(--text); }
+        .site-nav a.active { color: var(--accent); font-weight: 600; }
+        .card {
+            width: 100%;
             background: var(--panel);
             border-radius: 20px;
             padding: 36px 32px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.25);
             text-align: center;
+        }
+        .info-section {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            text-align: left;
+        }
+        .info-section h2 {
+            font-size: 16px;
+            margin: 0 0 10px;
+        }
+        .info-section p {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.7;
+            margin: 0 0 10px;
         }
         h1 {
             margin: 0 0 6px;
@@ -118,17 +155,16 @@
             transition: width 0.2s ease;
         }
 
-        .back-link {
-            display: inline-block;
-            margin-top: 24px;
-            font-size: 13px;
-            color: var(--muted);
-            text-decoration: none;
-        }
-        .back-link:hover { color: var(--text); }
     </style>
 </head>
 <body>
+    <div class="page">
+    <nav class="site-nav">
+        <a href="index.html">홈</a>
+        <a href="animal-test.html" class="active">동물상 테스트</a>
+        <a href="about.html">사이트 소개</a>
+        <a href="privacy.html">개인정보처리방침</a>
+    </nav>
     <div class="card">
         <h1>🐶🐱 동물상 테스트</h1>
         <p class="subtitle">사진을 올리면 AI가 강아지상인지 고양이상인지 판별해드립니다.</p>
@@ -140,9 +176,14 @@
         <div id="preview-container"></div>
         <div id="label-container"></div>
 
-        <a class="back-link" href="index.html">← 로또 추첨기로 돌아가기</a>
-        <br>
-        <a class="back-link" href="privacy.html">개인정보처리방침</a>
+        <div class="info-section">
+            <h2>동물상 테스트란?</h2>
+            <p>이 테스트는 Google의 머신러닝 학습 도구인 <strong>Teachable Machine</strong>으로 학습시킨 이미지 분류 모델을 사용합니다. 강아지상과 고양이상 사진 데이터를 학습한 모델이 업로드한 사진의 특징을 분석해 각 유형에 얼마나 가까운지 확률(%)로 보여줍니다.</p>
+            <p>모든 분석은 브라우저 안에서만 이루어지며, 업로드한 사진은 서버로 전송되거나 저장되지 않고 분석 후 그대로 사라집니다.</p>
+            <h2>유의사항</h2>
+            <p>본 테스트는 재미로 즐기는 AI 이미지 분류 서비스이며, 학습 데이터의 한계로 실제 인상과 다르게 판별될 수 있습니다. 결과는 참고용으로만 봐주세요.</p>
+        </div>
+    </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
