@@ -45,7 +45,9 @@
             font-size: 14px;
             line-height: 1.5;
         }
-        #startBtn {
+        #fileInput { display: none; }
+        .upload-label {
+            display: inline-block;
             padding: 14px 32px;
             font-size: 16px;
             font-weight: 600;
@@ -56,16 +58,23 @@
             cursor: pointer;
             transition: transform 0.15s ease, background 0.15s ease;
         }
-        #startBtn:hover { background: #4f46e5; }
-        #startBtn:active { transform: scale(0.97); }
-        #startBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .upload-label:hover { background: #4f46e5; }
+        .upload-label:active { transform: scale(0.97); }
 
-        #webcam-container {
+        #status {
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        #preview-container {
             display: flex;
             justify-content: center;
             margin: 24px 0;
         }
-        #webcam-container canvas {
+        #preview-container img {
+            max-width: 240px;
+            max-height: 240px;
             border-radius: 16px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.35);
         }
@@ -119,11 +128,13 @@
 <body>
     <div class="card">
         <h1>🐶🐱 동물상 테스트</h1>
-        <p class="subtitle">웹캠으로 얼굴을 비추면 AI가 강아지상인지 고양이상인지 판별해드립니다.</p>
+        <p class="subtitle">사진을 올리면 AI가 강아지상인지 고양이상인지 판별해드립니다.</p>
 
-        <button type="button" id="startBtn" onclick="init()">테스트 시작</button>
+        <label class="upload-label" for="fileInput">사진 선택하기</label>
+        <input type="file" id="fileInput" accept="image/*">
+        <div id="status"></div>
 
-        <div id="webcam-container"></div>
+        <div id="preview-container"></div>
         <div id="label-container"></div>
 
         <a class="back-link" href="index.html">← 로또 추첨기로 돌아가기</a>
@@ -134,61 +145,58 @@
     <script type="text/javascript">
         const URL = "https://teachablemachine.withgoogle.com/models/4Hmq4xZZv/";
 
-        let model, webcam, labelContainer, maxPredictions;
-        const startBtn = document.getElementById("startBtn");
+        let model, maxPredictions;
+        const fileInput = document.getElementById("fileInput");
+        const statusEl = document.getElementById("status");
+        const previewContainer = document.getElementById("preview-container");
+        const labelContainer = document.getElementById("label-container");
 
-        async function init() {
-            startBtn.disabled = true;
-            startBtn.textContent = "로딩 중...";
-
+        async function loadModel() {
+            if (model) return;
+            statusEl.textContent = "모델 로딩 중...";
             const modelURL = URL + "model.json";
             const metadataURL = URL + "metadata.json";
-
             model = await tmImage.load(modelURL, metadataURL);
             maxPredictions = model.getTotalClasses();
+            statusEl.textContent = "";
+        }
 
-            const flip = true;
-            webcam = new tmImage.Webcam(240, 240, flip);
-            await webcam.setup();
-            await webcam.play();
-            window.requestAnimationFrame(loop);
+        fileInput.addEventListener("change", async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
 
-            document.getElementById("webcam-container").innerHTML = "";
-            document.getElementById("webcam-container").appendChild(webcam.canvas);
+            await loadModel();
 
-            labelContainer = document.getElementById("label-container");
+            const img = document.createElement("img");
+            img.src = window.URL.createObjectURL(file);
+
+            previewContainer.innerHTML = "";
+            previewContainer.appendChild(img);
             labelContainer.innerHTML = "";
+            statusEl.textContent = "분석 중...";
+
+            img.onload = async () => {
+                await predict(img);
+                statusEl.textContent = "";
+            };
+        });
+
+        async function predict(imageElement) {
+            const prediction = await model.predict(imageElement);
+            prediction.sort((a, b) => b.probability - a.probability);
+
             for (let i = 0; i < maxPredictions; i++) {
+                const percent = (prediction[i].probability * 100).toFixed(0);
                 const row = document.createElement("div");
                 row.className = "result-row";
                 row.innerHTML = `
                     <div class="label-line">
-                        <span class="label-name"></span>
-                        <span class="label-percent"></span>
+                        <span class="label-name">${prediction[i].className}</span>
+                        <span class="label-percent">${percent}%</span>
                     </div>
-                    <div class="bar-track"><div class="bar-fill" style="width:0%"></div></div>
+                    <div class="bar-track"><div class="bar-fill" style="width:${percent}%"></div></div>
                 `;
                 labelContainer.appendChild(row);
-            }
-
-            startBtn.style.display = "none";
-        }
-
-        async function loop() {
-            webcam.update();
-            await predict();
-            window.requestAnimationFrame(loop);
-        }
-
-        async function predict() {
-            const prediction = await model.predict(webcam.canvas);
-            const rows = labelContainer.querySelectorAll(".result-row");
-            for (let i = 0; i < maxPredictions; i++) {
-                const percent = (prediction[i].probability * 100).toFixed(0);
-                const row = rows[i];
-                row.querySelector(".label-name").textContent = prediction[i].className;
-                row.querySelector(".label-percent").textContent = `${percent}%`;
-                row.querySelector(".bar-fill").style.width = `${percent}%`;
             }
         }
     </script>
